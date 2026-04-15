@@ -142,9 +142,9 @@ export const applyBrandDealService = async (data) => {
        tiktok_url, tiktok_followers,
        instagram_url, instagram_followers,
        player_type,
-       tier, tier_price, payment_note,
+       tier, tier_price,
        payment_status, tier_status
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
     [
       user_id,
       logo_url || null,
@@ -162,7 +162,6 @@ export const applyBrandDealService = async (data) => {
       player_type,
       tierConfig.label.toLowerCase(),
       tierConfig.price,
-      payment_note || null,
     ],
   );
 
