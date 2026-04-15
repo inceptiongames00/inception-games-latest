@@ -1,0 +1,32 @@
+runtime: nodejs20
+
+env: standard
+
+instance_class: F1
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 2
+
+env_variables:
+  GCP_PROJECT_ID: "inception-games"
+  GCP_BUCKET_NAME: "inception-games.appspot.com"
+  NODE_ENV: "production"
+  DB_USER: "inception-studio-db"
+  DB_PASSWORD: "$Dev0055##"
+  DB_NAME: "inception-studio-production"
+
+  # Mail
+  MAIL_HOST: "smtp.gmail.com"
+  MAIL_PORT: "465"
+  MAIL_SECURE: "true"
+  MAIL_USER: "devops@inception.games"
+  MAIL_PASS: "ogbb juwo qrhi pipc"
+  MAIL_FROM: "devops@inception.games"
+
+beta_settings:
+  cloud_sql_instances: inception-games:asia-northeast1:inception-studio-db
+
+handlers:
+  - url: /.*
+    script: auto
