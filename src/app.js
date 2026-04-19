@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
 // ── API Routes ───────────────────────────────────────────────────────────
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tournaments", tournamentRoutes);
-app.use("/api/v1/tournaments/:id", participantRoutes);
+app.use("/api/v1/participants/:id", participantRoutes);
 app.use("/api/v1/events", eventRoutes);
 app.use("/api/v1/scrims", scrimRoutes);
 app.use("/api/v1/brand-deals", brandDeals);

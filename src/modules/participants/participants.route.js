@@ -13,13 +13,13 @@ import {
 const router = express.Router();
 
 router.post("/tournaments/:id/register", registerParticipant);
-router.get("/participants/my-tournaments", getMyTournaments);
+router.get("/my-tournaments", getMyTournaments);
 router.post(
-  "/participants/:id/submit-payment",
+  "/:id/submit-payment",
   submitPaymentProof,
 );
-router.patch("/admin/participants/:id/verify", verifyPayment);
-router.patch("/admin/participants/:id/reject", rejectPayment);
+router.patch("/admin/:id/verify", verifyPayment);
+router.patch("/admin/:id/reject", rejectPayment);
 router.get("/notifications", getNotifications);
 router.patch("/notifications/mark-read", markNotificationsRead);
 
