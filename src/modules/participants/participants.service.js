@@ -128,7 +128,7 @@ export const getMyTournamentsService = async (email) => {
        tp.phone,
        tp.payment_status,
        tp.status        AS participant_status,
-       tp.created_at    AS registered_at,
+       tp.registered_at    AS registered_at,
        t.id             AS tournament_id,
        t.title,
        t.game,
@@ -142,7 +142,7 @@ export const getMyTournamentsService = async (email) => {
      FROM tournament_participants tp
      JOIN tournaments t ON t.id = tp.tournament_id
      WHERE tp.email = ?
-     ORDER BY tp.created_at DESC`,
+     ORDER BY tp.registered_at DESC`,
     [email],
   );
 
