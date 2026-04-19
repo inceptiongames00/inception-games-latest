@@ -97,15 +97,12 @@ export const paymentEmail = (p, t, bkashNumber, qrDataUrl) => `
       </div>
       <p style="margin:12px 0 0;font-size:12px;color:#888;">Send Money → Personal number</p>
 
-      <!-- QR Code -->
-      ${
-        qrDataUrl
-          ? `
+    <!-- QR Code — rendered via CID inline attachment -->
       <div style="margin-top:20px;">
         <p style="font-size:12px;color:#aaa;margin-bottom:10px;">Or scan this QR code:</p>
-        <img src="${qrDataUrl}" alt="Payment QR Code"
+        <img src="cid:payment-qr" alt="Payment QR Code"
              style="width:180px;height:180px;border-radius:12px;border:3px solid #e11d68;background:#fff;padding:8px;" />
-      </div>`
+      </div>
           : ""
       }
     </div>
