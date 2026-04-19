@@ -16,4 +16,6 @@ export const uploadProfileImages = upload.fields([
   { name: "banner", maxCount: 1 },
 ]);
 
+export const uploadPaymentScreenshot = upload.single("screenshot");
+
 export const uploadScrimImage = upload.single("banner");

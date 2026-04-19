@@ -1,105 +1,90 @@
+// participants.controller.js
+import { uploadPaymentScreenshot } from "../../middlewares/upload.middleware.js";
 import {
   registerParticipantService,
-  getParticipantsService,
-  getParticipantByIdService,
+  getMyTournamentsService,
+  submitPaymentProofService,
   verifyPaymentService,
   rejectPaymentService,
-  getPendingPaymentsService,
-} from "./participants.service";
+  getNotificationsService,
+  markNotificationsReadService,
+} from "./participants.service.js";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// REGISTER FOR TOURNAMENT
-// POST /api/v1/tournaments/:id/register
-// ─────────────────────────────────────────────────────────────────────────────
-export const registerParticipant = async (req, res, next) => {
-  console.log("🔵 registerParticipant hit"); // ← add this
+export const registerParticipant = async (req, res) => {
   try {
     const result = await registerParticipantService(req.params.id, req.body);
-    console.log("🟢 service returned"); // ← add this
-    return res.status(201).json({ success: true, ...result });
+    res.status(201).json(result);
   } catch (err) {
-    console.log("🔴 error caught:", err); // ← add this
-    next(err);
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
-// ─────────────────────────────────────────────────────────────────────────────
-// GET ALL PARTICIPANTS
-// GET /api/v1/tournaments/:id/participants?payment_status=Pending&status=Confirmed
-// ─────────────────────────────────────────────────────────────────────────────
-export const getParticipants = async (req, res, next) => {
+
+export const getMyTournaments = async (req, res) => {
   try {
-    const { payment_status, status } = req.query;
-    const result = await getParticipantsService(req.params.id, {
-      payment_status,
-      status,
+    const data = await getMyTournamentsService(req.query.email);
+    res.json(data);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+};
+
+export const submitPaymentProof = async (req, res) => {
+  try {
+    const { trx_id } = req.body;
+    const userEmail = req.query.email || req.body.email;
+
+    let screenshot_url = null;
+    if (req.file) {
+      const base64 = req.file.buffer.toString("base64");
+      const dataUrl = `data:${req.file.mimetype};base64,${base64}`;
+      screenshot_url = await uploadPaymentScreenshot(
+        dataUrl,
+        `payment-screenshots/${req.params.id}_${Date.now()}.png`,
+      );
+    }
+
+    const result = await submitPaymentProofService(req.params.id, userEmail, {
+      trx_id,
+      screenshot_url,
     });
-    return res.status(200).json({ success: true, ...result });
+    res.json(result);
   } catch (err) {
-    next(err);
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET SINGLE PARTICIPANT
-// GET /api/v1/tournaments/:id/participants/:participantId
-// ─────────────────────────────────────────────────────────────────────────────
-export const getParticipantById = async (req, res, next) => {
+export const verifyPayment = async (req, res) => {
   try {
-    const result = await getParticipantByIdService(
-      req.params.id,
-      req.params.participantId,
-    );
-    return res.status(200).json({ success: true, ...result });
+    const result = await verifyPaymentService(req.params.id);
+    res.json(result);
   } catch (err) {
-    next(err);
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VERIFY PAYMENT  (admin)
-// PATCH /api/v1/tournaments/:id/participants/:participantId/verify
-// body: { verified_by?, note? }
-// ─────────────────────────────────────────────────────────────────────────────
-export const verifyPayment = async (req, res, next) => {
+export const rejectPayment = async (req, res) => {
   try {
-    const result = await verifyPaymentService(
-      req.params.id,
-      req.params.participantId,
-      req.body,
-    );
-    return res.status(200).json({ success: true, ...result });
+    const result = await rejectPaymentService(req.params.id, req.body.reason);
+    res.json(result);
   } catch (err) {
-    next(err);
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// REJECT PAYMENT  (admin)
-// PATCH /api/v1/tournaments/:id/participants/:participantId/reject
-// body: { verified_by?, note }
-// ─────────────────────────────────────────────────────────────────────────────
-export const rejectPayment = async (req, res, next) => {
+export const getNotifications = async (req, res) => {
   try {
-    const result = await rejectPaymentService(
-      req.params.id,
-      req.params.participantId,
-      req.body,
-    );
-    return res.status(200).json({ success: true, ...result });
+    const data = await getNotificationsService(req.query.email);
+    res.json(data);
   } catch (err) {
-    next(err);
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET PENDING PAYMENTS  (admin dashboard)
-// GET /api/v1/tournaments/:id/participants/pending
-// ─────────────────────────────────────────────────────────────────────────────
-export const getPendingPayments = async (req, res, next) => {
+export const markNotificationsRead = async (req, res) => {
   try {
-    const result = await getPendingPaymentsService(req.params.id);
-    return res.status(200).json({ success: true, ...result });
+    const result = await markNotificationsReadService(req.query.email);
+    res.json(result);
   } catch (err) {
-    next(err);
+    res.status(err.status || 500).json({ error: err.message });
   }
 };

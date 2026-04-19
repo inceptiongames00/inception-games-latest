@@ -1,7 +1,7 @@
 {
-  "name": "le-travella",
+  "name": "inception-games-api",
   "version": "1.0.0",
-  "description": "Le Travella API",
+  "description": "Inception Games API",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
@@ -23,7 +23,8 @@
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
     "mysql2": "^3.9.7",
-    "nodemailer": "^6.9.14"
+    "nodemailer": "^6.9.14",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "gulp": "^5.0.1",

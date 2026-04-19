@@ -16,6 +16,9 @@ env_variables:
   DB_PASSWORD: "$Dev0055##"
   DB_NAME: "inception-studio-production"
 
+  #BKASH
+  BKASH_NUMBER: "01868984364"
+
   # Mail
   MAIL_HOST: "smtp.gmail.com"
   MAIL_PORT: "465"

@@ -1,31 +1,26 @@
-import { Router } from "express";
+// participants.route.js
+import express from "express";
 import {
   registerParticipant,
-  getParticipants,
-  getParticipantById,
+  getMyTournaments,
+  submitPaymentProof,
   verifyPayment,
   rejectPayment,
-  getPendingPayments,
-} from "../participants/participants.controller";
+  getNotifications,
+  markNotificationsRead,
+} from "./participants.controller.js";
 
-const router = Router({ mergeParams: true }); // mergeParams gives access to :id from parent router
+const router = express.Router();
 
-// ── Registration ───────────────────────────────────────────────────────────
-// POST   /api/v1/tournaments/:id/register
-router.post("/register", registerParticipant);
-
-// ── Participants (admin) ───────────────────────────────────────────────────
-// GET    /api/v1/tournaments/:id/participants                   — all (filterable)
-// GET    /api/v1/tournaments/:id/participants/pending           — pending payments only
-// GET    /api/v1/tournaments/:id/participants/:participantId    — single participant
-router.get("/participants", getParticipants);
-router.get("/participants/pending", getPendingPayments);
-router.get("/participants/:participantId", getParticipantById);
-
-// ── Payment Actions (admin) ────────────────────────────────────────────────
-// PATCH  /api/v1/tournaments/:id/participants/:participantId/verify  — approve payment
-// PATCH  /api/v1/tournaments/:id/participants/:participantId/reject  — reject payment
-router.patch("/participants/:participantId/verify", verifyPayment);
-router.patch("/participants/:participantId/reject", rejectPayment);
+router.post("/tournaments/:id/register", registerParticipant);
+router.get("/participants/my-tournaments", getMyTournaments);
+router.post(
+  "/participants/:id/submit-payment",
+  submitPaymentProof,
+);
+router.patch("/admin/participants/:id/verify", verifyPayment);
+router.patch("/admin/participants/:id/reject", rejectPayment);
+router.get("/notifications", getNotifications);
+router.patch("/notifications/mark-read", markNotificationsRead);
 
 export default router;
