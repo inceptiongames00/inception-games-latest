@@ -71,21 +71,21 @@ export const registrationEmail = (p, t) => `
 
 // ── 2. Payment instruction email (bKash + embedded QR) ────────
 // qrDataUrl = base64 data:image/png;base64,... string
-export const paymentEmail = (p, t, bkashNumber, qrDataUrl) => `
+export const paymentEmail = (p, t, bkashNumber) => `
 <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#0f0f1a;border-radius:16px;overflow:hidden;color:#fff;">
-
+ 
   <!-- Header -->
   <div style="background:linear-gradient(135deg,#e11d68,#a855f7);padding:32px;text-align:center;">
     <h1 style="margin:0;font-size:26px;letter-spacing:1px;">Inception Games</h1>
     <p style="margin:6px 0 0;opacity:.85;font-size:14px;">💳 Complete Your Payment</p>
   </div>
-
+ 
   <div style="padding:32px;">
     <p style="font-size:16px;margin-top:0;">
       Hey <strong style="color:#a855f7;">${p.full_name}</strong>! 🎮<br/>
       Please complete your payment for <strong style="color:#facc15;">${t.title}</strong> to confirm your slot.
     </p>
-
+ 
     <!-- bKash details -->
     <div style="background:linear-gradient(135deg,#1a0a1e,#2d0a2e);border:2px solid #e11d68;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
       <div style="display:inline-block;background:#e11d68;color:#fff;font-size:11px;font-weight:bold;letter-spacing:2px;padding:4px 14px;border-radius:20px;margin-bottom:16px;">
@@ -96,17 +96,15 @@ export const paymentEmail = (p, t, bkashNumber, qrDataUrl) => `
         <span style="font-size:28px;font-weight:bold;letter-spacing:4px;color:#e11d68;">${bkashNumber}</span>
       </div>
       <p style="margin:12px 0 0;font-size:12px;color:#888;">Send Money → Personal number</p>
-
-    <!-- QR Code — rendered via CID inline attachment -->
+ 
+      <!-- QR Code via CID inline attachment -->
       <div style="margin-top:20px;">
         <p style="font-size:12px;color:#aaa;margin-bottom:10px;">Or scan this QR code:</p>
-        <img src="cid:payment-qr" alt="Payment QR Code"
+        <img src="cid:payment-qr" alt="bKash QR Code"
              style="width:180px;height:180px;border-radius:12px;border:3px solid #e11d68;background:#fff;padding:8px;" />
       </div>
-          : ""
-      }
     </div>
-
+ 
     <!-- Steps -->
     <div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;">
       <h3 style="color:#facc15;margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:1px;">📝 How to Pay</h3>
@@ -118,8 +116,8 @@ export const paymentEmail = (p, t, bkashNumber, qrDataUrl) => `
         <li>Complete the transaction and note the <strong style="color:#fff;">Transaction ID</strong></li>
       </ol>
     </div>
-
-    <!-- Submit payment instruction -->
+ 
+    <!-- After payment instruction -->
     <div style="background:linear-gradient(135deg,#0f2a1a,#0a1f0f);border:1px solid #4ade80;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
       <h3 style="color:#4ade80;margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:1px;">✅ After Payment</h3>
       <p style="color:#ccc;font-size:14px;margin:0 0 16px;">
@@ -130,7 +128,7 @@ export const paymentEmail = (p, t, bkashNumber, qrDataUrl) => `
         Go to Dashboard →
       </a>
     </div>
-
+ 
     <!-- Registration summary -->
     <div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;">
       <h3 style="color:#a855f7;margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:1px;">📋 Registration Summary</h3>
@@ -144,12 +142,12 @@ export const paymentEmail = (p, t, bkashNumber, qrDataUrl) => `
             <td style="padding:7px 0;"><span style="background:#facc15;color:#000;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:bold;">PENDING</span></td></tr>
       </table>
     </div>
-
+ 
     <p style="font-size:13px;color:#666;text-align:center;margin-bottom:0;">
       ⏰ Please complete payment within <strong style="color:#facc15;">24 hours</strong> to secure your slot.
     </p>
   </div>
-
+ 
   <div style="background:#0a0a14;padding:16px;text-align:center;">
     <p style="margin:0;color:#555;font-size:12px;">© ${new Date().getFullYear()} Inception Games. All rights reserved.</p>
   </div>

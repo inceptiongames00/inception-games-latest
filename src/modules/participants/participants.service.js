@@ -156,9 +156,8 @@ export const getMyTournamentsService = async (email) => {
 
 
 
-// Internal helper — generates QR and sends payment email with CID inline image
 async function _sendPaymentEmail(registration, tournament) {
-  // Generate QR as buffer (not data URL)
+  // toBuffer() not toDataURL() — email clients block data: URLs
   const qrBuffer = await QRCode.toBuffer(BKASH_NUMBER, {
     width: 300,
     margin: 2,
@@ -172,8 +171,8 @@ async function _sendPaymentEmail(registration, tournament) {
     attachments: [
       {
         filename: "payment-qr.png",
-        content: qrBuffer,
-        cid: "payment-qr",          // must match src="cid:payment-qr" in the email
+        content: qrBuffer, // raw PNG buffer
+        cid: "payment-qr", // matches src="cid:payment-qr" in the HTML
         contentDisposition: "inline",
       },
     ],
