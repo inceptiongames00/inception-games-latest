@@ -60,22 +60,22 @@ export const registerParticipantService = async (tournamentId, data) => {
   try {
     await conn.beginTransaction();
 
-    const [insertResult] = await conn.query(
-      `INSERT INTO tournament_participants
-         (tournament_id, full_name, email, phone, in_game_name, in_game_id,
-          discord_id, reg_fee, trx_id, payment_method, payment_status, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Pending')`,
-      [
-        tournamentId,
-        full_name,
-        email,
-        phone,
-        in_game_name,
-        in_game_id,
-        discord_id || null,
-        tournament.reg_fee || 0,
-      ],
-    );
+   const [insertResult] = await conn.query(
+     `INSERT INTO tournament_participants
+     (tournament_id, full_name, email, phone, in_game_name, in_game_id,
+      discord_id, reg_fee, payment_status, status)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Pending')`,
+     [
+       tournamentId,
+       full_name,
+       email,
+       phone,
+       in_game_name,
+       in_game_id,
+       discord_id || null,
+       tournament.reg_fee || 0,
+     ],
+   );
 
     await conn.query(
       `UPDATE tournaments SET filled_slots = filled_slots + 1 WHERE id = ?`,
