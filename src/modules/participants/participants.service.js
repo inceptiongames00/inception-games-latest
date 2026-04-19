@@ -1,4 +1,3 @@
-import QRCode from "qrcode";
 import pool from "../../database/db.js";
 import sendEmail from "../../utils/sendEmail.js";
 import {
@@ -128,10 +127,7 @@ export const getMyTournamentsService = async (email) => {
        tp.in_game_name,
        tp.phone,
        tp.payment_status,
-       tp.payment_screenshot_url,
-       tp.submission_trx_id,
        tp.status        AS participant_status,
-       tp.qr_code_url,
        tp.created_at    AS registered_at,
        t.id             AS tournament_id,
        t.title,
@@ -155,27 +151,11 @@ export const getMyTournamentsService = async (email) => {
  
 
 
-
 async function _sendPaymentEmail(registration, tournament) {
-  // toBuffer() not toDataURL() — email clients block data: URLs
-  const qrBuffer = await QRCode.toBuffer(BKASH_NUMBER, {
-    width: 300,
-    margin: 2,
-    color: { dark: "#000000", light: "#ffffff" },
-  });
-
   await sendEmail({
     to: registration.email,
     subject: `💳 Complete Your Payment — ${tournament.title}`,
     html: paymentEmail(registration, tournament, BKASH_NUMBER),
-    attachments: [
-      {
-        filename: "payment-qr.png",
-        content: qrBuffer, // raw PNG buffer
-        cid: "payment-qr", // matches src="cid:payment-qr" in the HTML
-        contentDisposition: "inline",
-      },
-    ],
   });
 }
 

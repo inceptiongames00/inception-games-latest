@@ -97,12 +97,6 @@ export const paymentEmail = (p, t, bkashNumber) => `
       </div>
       <p style="margin:12px 0 0;font-size:12px;color:#888;">Send Money → Personal number</p>
  
-      <!-- QR Code via CID inline attachment -->
-      <div style="margin-top:20px;">
-        <p style="font-size:12px;color:#aaa;margin-bottom:10px;">Or scan this QR code:</p>
-        <img src="cid:payment-qr" alt="bKash QR Code"
-             style="width:180px;height:180px;border-radius:12px;border:3px solid #e11d68;background:#fff;padding:8px;" />
-      </div>
     </div>
  
     <!-- Steps -->
