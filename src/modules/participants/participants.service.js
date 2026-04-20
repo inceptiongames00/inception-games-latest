@@ -9,15 +9,11 @@ import {
 
 const BKASH_NUMBER = process.env.BKASH_NUMBER; // set in .env
 
+const generateReference = (id) => `IG-${String(1000 + id).padStart(6, "0")}`;
+
 export const registerParticipantService = async (tournamentId, data) => {
-  const {
-    full_name,
-    email,
-    phone,
-    in_game_name,
-    in_game_id,
-    discord_id,
-  } = data;
+  const { full_name, email, phone, in_game_name, in_game_id, discord_id } =
+    data;
 
   // ── Validation ──────────────────────────────────────────────
   if (!full_name) throw { status: 400, message: "Full name is required" };
@@ -42,7 +38,7 @@ export const registerParticipantService = async (tournamentId, data) => {
       message: "Registration is not open for this tournament",
     };
 
-  // ── Duplicate checks ────────────────────────────────────────
+  // ── Duplicate check ─────────────────────────────────────────
   const [dupEmail] = await pool.query(
     `SELECT id FROM tournament_participants WHERE tournament_id = ? AND email = ?`,
     [tournamentId, email],
@@ -53,28 +49,37 @@ export const registerParticipantService = async (tournamentId, data) => {
       message: "This email is already registered for this tournament",
     };
 
-
   // ── DB transaction ──────────────────────────────────────────
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-   const [insertResult] = await conn.query(
-     `INSERT INTO tournament_participants
-     (tournament_id, full_name, email, phone, in_game_name, in_game_id,
-      discord_id, reg_fee, payment_status, status)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Pending')`,
-     [
-       tournamentId,
-       full_name,
-       email,
-       phone,
-       in_game_name,
-       in_game_id,
-       discord_id || null,
-       tournament.reg_fee || 0,
-     ],
-   );
+    const [insertResult] = await conn.query(
+      `INSERT INTO tournament_participants
+       (tournament_id, full_name, email, phone, in_game_name, in_game_id,
+        discord_id, reg_fee, payment_status, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Pending')`,
+      [
+        tournamentId,
+        full_name,
+        email,
+        phone,
+        in_game_name,
+        in_game_id,
+        discord_id || null,
+        tournament.reg_fee || 0,
+      ],
+    );
+
+    const participantId = insertResult.insertId;
+
+    // ── Generate reference number & save immediately ────────
+    const reference = generateReference(participantId);
+
+    await conn.query(
+      `UPDATE tournament_participants SET payment_reference = ? WHERE id = ?`,
+      [reference, participantId],
+    );
 
     await conn.query(
       `UPDATE tournaments SET filled_slots = filled_slots + 1 WHERE id = ?`,
@@ -84,30 +89,30 @@ export const registerParticipantService = async (tournamentId, data) => {
     await conn.commit();
     conn.release();
 
-    // ── Fetch inserted record ───────────────────────────────
+    // ── Fetch full record ───────────────────────────────────
     const [rows] = await pool.query(
       `SELECT * FROM tournament_participants WHERE id = ?`,
-      [insertResult.insertId],
+      [participantId],
     );
     const registration = rows[0];
-    const participantId = registration.id;
 
-    // ── Send registration received email (non-blocking) ─────
+    // ── Send registration email (non-blocking) ──────────────
     sendEmail({
       to: email,
       subject: `✅ Registration Received — ${tournament.title}`,
-      html: registrationEmail(registration, tournament),
+      html: registrationEmail(registration, tournament, reference), // pass reference
     }).catch((e) =>
       console.error("[Mail] Registration email failed:", e.message),
     );
 
-    // ── Generate QR + send payment email (non-blocking) ────
-    _sendPaymentEmail(registration, tournament, participantId).catch((e) =>
-      console.error("[Mail] Payment email failed:", e.message),
+    // ── Send payment details email (non-blocking) ───────────
+    _sendPaymentEmail(registration, tournament, participantId, reference).catch(
+      (e) => console.error("[Mail] Payment email failed:", e.message),
     );
 
     return {
       message: "Registration submitted! Check your email for payment details.",
+      reference,
       registration,
     };
   } catch (err) {
@@ -115,6 +120,87 @@ export const registerParticipantService = async (tournamentId, data) => {
     conn.release();
     throw err;
   }
+};
+
+
+export const submitPaymentProofService = async (
+  participantId,
+  userEmail,
+  data,
+) => {
+  const { trx_id, reference } = data;
+
+  if (!trx_id) throw { status: 400, message: "Transaction ID is required" };
+  if (!reference)
+    throw { status: 400, message: "Payment reference is required" };
+
+  // ── Verify participant ──────────────────────────────────────
+  const [rows] = await pool.query(
+    `SELECT tp.*, t.title AS tournament_title, t.id AS tournament_id, t.reg_fee, t.game, t.currency
+     FROM tournament_participants tp
+     JOIN tournaments t ON t.id = tp.tournament_id
+     WHERE tp.id = ? AND tp.email = ?`,
+    [participantId, userEmail],
+  );
+  if (!rows.length) throw { status: 404, message: "Registration not found" };
+
+  const participant = rows[0];
+
+  // ── Match reference number ──────────────────────────────────
+  if (participant.payment_reference !== reference)
+    throw { status: 400, message: "Invalid payment reference number" };
+
+  if (participant.payment_status === "Verified")
+    throw { status: 400, message: "Payment is already verified" };
+
+  // ── Check trx_id not already used ──────────────────────────
+  const [dupTrx] = await pool.query(
+    `SELECT id FROM tournament_participants WHERE submission_trx_id = ? AND id != ?`,
+    [trx_id, participantId],
+  );
+  if (dupTrx.length)
+    throw {
+      status: 409,
+      message: "This Transaction ID has already been submitted",
+    };
+
+  // ── Update DB ───────────────────────────────────────────────
+  await pool.query(
+    `UPDATE tournament_participants
+     SET submission_trx_id = ?,
+         payment_status = 'Submitted',
+         payment_submitted_at = NOW()
+     WHERE id = ?`,
+    [trx_id, participantId],
+  );
+
+  // ── Send confirmation email ─────────────────────────────────
+  const tournament = {
+    title: participant.tournament_title,
+    game: participant.game,
+    reg_fee: participant.reg_fee,
+    currency: participant.currency,
+  };
+
+  const p = {
+    full_name: participant.full_name,
+    in_game_name: participant.in_game_name,
+    email: participant.email,
+  };
+
+  sendEmail({
+    to: participant.email,
+    subject: `Payment Submitted — Ref: ${reference}`,
+    html: paymentEmail(p, tournament, trx_id, reference),
+  }).catch((e) =>
+    console.error("[Mail] Payment confirmation email failed:", e.message),
+  );
+
+  return {
+    message: "Payment proof submitted successfully. Under review.",
+    reference,
+    trx_id,
+  };
 };
 
 export const getMyTournamentsService = async (email) => {
@@ -160,57 +246,6 @@ async function _sendPaymentEmail(registration, tournament) {
 }
 
 
-export const submitPaymentProofService = async (
-  participantId,
-  userEmail,
-  data,
-) => {
-  const { trx_id, screenshot_url } = data;
-
-  if (!trx_id) throw { status: 400, message: "Transaction ID is required" };
-  if (!screenshot_url)
-    throw { status: 400, message: "Payment screenshot is required" };
-
-  // ── Verify participant belongs to this user ─────────────────
-  const [rows] = await pool.query(
-    `SELECT tp.*, t.title AS tournament_title, t.id AS tournament_id
-     FROM tournament_participants tp
-     JOIN tournaments t ON t.id = tp.tournament_id
-     WHERE tp.id = ? AND tp.email = ?`,
-    [participantId, userEmail],
-  );
-  if (!rows.length) throw { status: 404, message: "Registration not found" };
-
-  const participant = rows[0];
-
-  if (participant.payment_status === "Verified")
-    throw { status: 400, message: "Payment is already verified" };
-
-  // ── Check trx_id not used by someone else ──────────────────
-  const [dupTrx] = await pool.query(
-    `SELECT id FROM tournament_participants
-     WHERE submission_trx_id = ? AND id != ?`,
-    [trx_id, participantId],
-  );
-  if (dupTrx.length)
-    throw {
-      status: 409,
-      message: "This Transaction ID has already been submitted",
-    };
-
-  // ── Update DB ───────────────────────────────────────────────
-  await pool.query(
-    `UPDATE tournament_participants
-     SET submission_trx_id = ?,
-         payment_screenshot_url = ?,
-         payment_status = 'Submitted',
-         payment_submitted_at = NOW()
-     WHERE id = ?`,
-    [trx_id, screenshot_url, participantId],
-  );
-
-  return { message: "Payment proof submitted successfully. Under review." };
-};
 
 
 

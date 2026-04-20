@@ -69,9 +69,7 @@ export const registrationEmail = (p, t) => `
   </div>
 </div>`;
 
-// ── 2. Payment instruction email (bKash + embedded QR) ────────
-// qrDataUrl = base64 data:image/png;base64,... string
-export const paymentEmail = (p, t, bkashNumber) => `
+export const paymentEmail = (p, t, bkashNumber, reference) => `
 <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#0f0f1a;border-radius:16px;overflow:hidden;color:#fff;">
  
   <!-- Header -->
@@ -85,6 +83,17 @@ export const paymentEmail = (p, t, bkashNumber) => `
       Hey <strong style="color:#a855f7;">${p.full_name}</strong>! 🎮<br/>
       Please complete your payment for <strong style="color:#facc15;">${t.title}</strong> to confirm your slot.
     </p>
+
+    <!-- Reference Number -->
+    <div style="background:linear-gradient(135deg,#0f1a2a,#0a1220);border:2px solid #a855f7;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center;">
+      <div style="display:inline-block;background:#a855f7;color:#fff;font-size:11px;font-weight:bold;letter-spacing:2px;padding:4px 14px;border-radius:20px;margin-bottom:12px;">
+        YOUR PAYMENT REFERENCE
+      </div>
+      <div style="background:#0f0f1a;border:1px dashed #a855f7;border-radius:8px;padding:12px 24px;display:inline-block;margin:8px 0;">
+        <span style="font-size:28px;font-weight:bold;letter-spacing:4px;color:#a855f7;">${reference}</span>
+      </div>
+      <p style="margin:10px 0 0;font-size:12px;color:#888;">Use this reference when submitting your payment proof</p>
+    </div>
  
     <!-- bKash details -->
     <div style="background:linear-gradient(135deg,#1a0a1e,#2d0a2e);border:2px solid #e11d68;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
@@ -96,7 +105,6 @@ export const paymentEmail = (p, t, bkashNumber) => `
         <span style="font-size:28px;font-weight:bold;letter-spacing:4px;color:#e11d68;">${bkashNumber}</span>
       </div>
       <p style="margin:12px 0 0;font-size:12px;color:#888;">Send Money → Personal number</p>
- 
     </div>
  
     <!-- Steps -->
@@ -115,7 +123,7 @@ export const paymentEmail = (p, t, bkashNumber) => `
     <div style="background:linear-gradient(135deg,#0f2a1a,#0a1f0f);border:1px solid #4ade80;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
       <h3 style="color:#4ade80;margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:1px;">✅ After Payment</h3>
       <p style="color:#ccc;font-size:14px;margin:0 0 16px;">
-        Log in to your dashboard and submit your <strong style="color:#fff;">Transaction ID</strong> + a <strong style="color:#fff;">screenshot</strong> of the payment to verify your slot.
+        Log in to your dashboard and submit your <strong style="color:#fff;">Transaction ID</strong> along with your <strong style="color:#a855f7;">Reference Number (${reference})</strong> to verify your slot.
       </p>
       <a href="https://www.inception.games/dashboard"
          style="display:inline-block;background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:bold;letter-spacing:.5px;">
@@ -132,6 +140,7 @@ export const paymentEmail = (p, t, bkashNumber) => `
         <tr><td style="padding:7px 0;color:#aaa;">Registration Fee</td><td style="padding:7px 0;color:#4ade80;font-weight:bold;">${t.reg_fee} ${t.currency || "BDT"}</td></tr>
         <tr><td style="padding:7px 0;color:#aaa;">Your Name</td><td style="padding:7px 0;">${p.full_name}</td></tr>
         <tr><td style="padding:7px 0;color:#aaa;">In-Game Name</td><td style="padding:7px 0;">${p.in_game_name || "N/A"}</td></tr>
+        <tr><td style="padding:7px 0;color:#aaa;">Reference No.</td><td style="padding:7px 0;"><strong style="color:#a855f7;">${reference}</strong></td></tr>
         <tr><td style="padding:7px 0;color:#aaa;">Payment Status</td>
             <td style="padding:7px 0;"><span style="background:#facc15;color:#000;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:bold;">PENDING</span></td></tr>
       </table>

@@ -27,25 +27,14 @@ export const getMyTournaments = async (req, res) => {
     res.status(err.status || 500).json({ error: err.message });
   }
 };
-
 export const submitPaymentProof = async (req, res) => {
   try {
-    const { trx_id } = req.body;
+    const { trx_id, reference } = req.body;
     const userEmail = req.query.email || req.body.email;
-
-    let screenshot_url = null;
-    if (req.file) {
-      const base64 = req.file.buffer.toString("base64");
-      const dataUrl = `data:${req.file.mimetype};base64,${base64}`;
-      screenshot_url = await uploadPaymentScreenshot(
-        dataUrl,
-        `payment-screenshots/${req.params.id}_${Date.now()}.png`,
-      );
-    }
 
     const result = await submitPaymentProofService(req.params.id, userEmail, {
       trx_id,
-      screenshot_url,
+      reference,
     });
     res.json(result);
   } catch (err) {
