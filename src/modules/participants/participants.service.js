@@ -237,13 +237,20 @@ export const getMyTournamentsService = async (email) => {
  
 
 
-async function _sendPaymentEmail(registration, tournament) {
+const _sendPaymentEmail = async (
+  registration,
+  tournament,
+  participantId,
+  reference,
+) => {
+  const bkashNumber = process.env.BKASH_NUMBER; // or however you store it
+
   await sendEmail({
     to: registration.email,
     subject: `💳 Complete Your Payment — ${tournament.title}`,
-    html: paymentEmail(registration, tournament, BKASH_NUMBER),
+    html: paymentEmail(registration, tournament, bkashNumber, reference), // ✅ reference 4th param
   });
-}
+};
 
 
 
