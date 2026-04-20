@@ -11,6 +11,7 @@ import participantRoutes from "./modules/participants/participants.route.js";
 import eventRoutes from "./modules/events/event.route.js";
 import scrimRoutes from "./modules/scrims/scrim.route.js";
 import brandDeals from "./modules/Brand_deals/brand.route.js"
+import contactRoutes from "./modules/contact/contact.route.js";
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use("/api/v1/participants", participantRoutes);
 app.use("/api/v1/events", eventRoutes);
 app.use("/api/v1/scrims", scrimRoutes);
 app.use("/api/v1/brand-deals", brandDeals);
+app.use("/api/v1/contact", contactRoutes);
 
 // ── 404 Handler ────────────────────────────────────────────────────────────
 app.use((req, res) => {
