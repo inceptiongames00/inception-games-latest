@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import pool from "../../database/db.js";
 import sendEmail from "../../utils/sendEmail.js";
 import { uploadToGCP } from "../../utils/gcpupload.js";
+import { getSignedUrl } from "../../middlewares/upload.middleware.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -430,6 +431,7 @@ export const getProfileService = async (identifier) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 
+
 export const updateProfileService = async (userId, updates, files = {}) => {
   const {
     full_name,
@@ -444,33 +446,39 @@ export const updateProfileService = async (userId, updates, files = {}) => {
     country,
   } = updates;
 
-  // Check user exists
-  const [users] = await pool.query("SELECT id, email FROM users WHERE id = ?", [
+  // check user
+  const [users] = await pool.query("SELECT id FROM users WHERE id = ?", [
     userId,
   ]);
-  if (users.length === 0) throw { status: 404, message: "User not found" };
 
-  // Check username not taken
+  if (!users.length) {
+    throw { status: 404, message: "User not found" };
+  }
+
+  // username check
   if (username) {
     const [taken] = await pool.query(
       "SELECT id FROM users WHERE username = ? AND id != ?",
       [username, userId],
     );
-    if (taken.length > 0)
-      throw { status: 409, message: "Username already taken. Try another." };
+
+    if (taken.length) {
+      throw { status: 409, message: "Username already taken" };
+    }
   }
 
-  // Upload images to GCP if files were sent
+  // upload files → store file paths only
   let avatar_url, banner_url;
 
   if (files.avatar?.[0]) {
     avatar_url = await uploadToGCP(files.avatar[0], "avatars");
   }
+
   if (files.banner?.[0]) {
     banner_url = await uploadToGCP(files.banner[0], "banners");
   }
 
-  // Build dynamic SET clause
+  // build update query
   const fields = [];
   const values = [];
 
@@ -478,53 +486,65 @@ export const updateProfileService = async (userId, updates, files = {}) => {
     fields.push("full_name = ?");
     values.push(full_name);
   }
+
   if (username !== undefined) {
     fields.push("username = ?");
     values.push(username);
   }
+
   if (discord !== undefined) {
     fields.push("discord = ?");
     values.push(discord);
   }
+
   if (bio !== undefined) {
     fields.push("bio = ?");
     values.push(bio);
   }
+
   if (phone !== undefined) {
     fields.push("phone = ?");
     values.push(phone);
   }
+
   if (primary_game !== undefined) {
     fields.push("primary_game = ?");
     values.push(primary_game);
   }
+
   if (game_role !== undefined) {
     fields.push("game_role = ?");
     values.push(game_role);
   }
+
   if (rank !== undefined) {
     fields.push("`rank` = ?");
     values.push(rank);
   }
+
   if (continent !== undefined) {
     fields.push("continent = ?");
     values.push(continent);
   }
+
   if (country !== undefined) {
     fields.push("country = ?");
     values.push(country);
   }
-  if (avatar_url !== undefined) {
+
+  if (avatar_url) {
     fields.push("avatar_url = ?");
     values.push(avatar_url);
   }
-  if (banner_url !== undefined) {
+
+  if (banner_url) {
     fields.push("banner_url = ?");
     values.push(banner_url);
   }
 
-  if (fields.length === 0)
-    throw { status: 400, message: "No fields provided to update" };
+  if (!fields.length) {
+    throw { status: 400, message: "No fields provided" };
+  }
 
   values.push(userId);
 
@@ -533,16 +553,26 @@ export const updateProfileService = async (userId, updates, files = {}) => {
     values,
   );
 
-  // Return updated profile
-  const [result] = await pool.query(
-    `SELECT id, email, phone, full_name, username, discord, bio,
-            primary_game, game_role, \`rank\`, continent, country,
-            avatar_url, banner_url, role, is_verified, created_at
-     FROM users WHERE id = ?`,
-    [userId],
-  );
+  // fetch updated user
+  const [result] = await pool.query(`SELECT * FROM users WHERE id = ?`, [
+    userId,
+  ]);
 
-  return { message: "Profile updated successfully!", user: result[0] };
+  const user = result[0];
+
+  // convert to signed URLs (IMPORTANT)
+  if (user.avatar_url) {
+    user.avatar_url = await getSignedUrl(user.avatar_url);
+  }
+
+  if (user.banner_url) {
+    user.banner_url = await getSignedUrl(user.banner_url);
+  }
+
+  return {
+    message: "Profile updated successfully!",
+    user,
+  };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

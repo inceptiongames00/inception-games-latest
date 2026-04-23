@@ -68,15 +68,22 @@ export const saveGamingProfile = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, ...result });
 });
 
-// POST /api/v1/auth/register/profile-images
-// Step 5 → Images tab
-// body: { email, avatar_url?, banner_url? }
+
 export const updateProfile = [
   uploadProfileImages,
+
   async (req, res) => {
     try {
-      const { userId } = req.params; // ← from URL param
+      const userId = req.params.userId; // keep consistent naming
+
+      if (!userId) {
+        return res.status(400).json({
+          message: "userId is required in params",
+        });
+      }
+
       const result = await updateProfileService(userId, req.body, req.files);
+
       res.status(200).json(result);
     } catch (err) {
       res.status(err.status || 500).json({
