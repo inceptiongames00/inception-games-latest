@@ -10,7 +10,7 @@ automatic_scaling:
 
 env_variables:
   GCP_PROJECT_ID: "inception-games"
-  GCP_BUCKET_NAME: "inception-games.appspot.com"
+  GCP_BUCKET_NAME: "inception-games-storage"
   NODE_ENV: "production"
   DB_USER: "inception-studio-db"
   DB_PASSWORD: "$Dev0055##"
