@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 import pool from "../../database/db.js";
 import sendEmail from "../../utils/sendEmail.js";
 import { uploadToGCP } from "../../utils/gcpupload.js";
-import { getSignedUrl } from "../../middlewares/upload.middleware.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -422,28 +421,13 @@ export const getProfileService = async (identifier) => {
     [identifier],
   );
 
-  if (!rows.length) {
-    throw { status: 404, message: "User not found" };
-  }
-
-  const user = rows[0];
-
-  // 🔥 convert to signed URLs
-  if (user.avatar_url) {
-    user.avatar_url = await getSignedUrl(user.avatar_url);
-  }
-
-  if (user.banner_url) {
-    user.banner_url = await getSignedUrl(user.banner_url);
-  }
-
-  return { user };
+  if (rows.length === 0) throw { status: 404, message: "User not found" };
+  return { user: rows[0] };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UPDATE PROFILE — matches your profile page fields
 // ─────────────────────────────────────────────────────────────────────────────
-
 
 
 export const updateProfileService = async (userId, updates, files = {}) => {
@@ -460,39 +444,33 @@ export const updateProfileService = async (userId, updates, files = {}) => {
     country,
   } = updates;
 
-  // check user
-  const [users] = await pool.query("SELECT id FROM users WHERE id = ?", [
+  // Check user exists
+  const [users] = await pool.query("SELECT id, email FROM users WHERE id = ?", [
     userId,
   ]);
+  if (users.length === 0) throw { status: 404, message: "User not found" };
 
-  if (!users.length) {
-    throw { status: 404, message: "User not found" };
-  }
-
-  // username check
+  // Check username not taken
   if (username) {
     const [taken] = await pool.query(
       "SELECT id FROM users WHERE username = ? AND id != ?",
       [username, userId],
     );
-
-    if (taken.length) {
-      throw { status: 409, message: "Username already taken" };
-    }
+    if (taken.length > 0)
+      throw { status: 409, message: "Username already taken. Try another." };
   }
 
-  // upload files → store file paths only
+  // Upload images to GCP if files were sent
   let avatar_url, banner_url;
 
   if (files.avatar?.[0]) {
     avatar_url = await uploadToGCP(files.avatar[0], "avatars");
   }
-
   if (files.banner?.[0]) {
     banner_url = await uploadToGCP(files.banner[0], "banners");
   }
 
-  // build update query
+  // Build dynamic SET clause
   const fields = [];
   const values = [];
 
@@ -500,65 +478,53 @@ export const updateProfileService = async (userId, updates, files = {}) => {
     fields.push("full_name = ?");
     values.push(full_name);
   }
-
   if (username !== undefined) {
     fields.push("username = ?");
     values.push(username);
   }
-
   if (discord !== undefined) {
     fields.push("discord = ?");
     values.push(discord);
   }
-
   if (bio !== undefined) {
     fields.push("bio = ?");
     values.push(bio);
   }
-
   if (phone !== undefined) {
     fields.push("phone = ?");
     values.push(phone);
   }
-
   if (primary_game !== undefined) {
     fields.push("primary_game = ?");
     values.push(primary_game);
   }
-
   if (game_role !== undefined) {
     fields.push("game_role = ?");
     values.push(game_role);
   }
-
   if (rank !== undefined) {
     fields.push("`rank` = ?");
     values.push(rank);
   }
-
   if (continent !== undefined) {
     fields.push("continent = ?");
     values.push(continent);
   }
-
   if (country !== undefined) {
     fields.push("country = ?");
     values.push(country);
   }
-
-  if (avatar_url) {
+  if (avatar_url !== undefined) {
     fields.push("avatar_url = ?");
     values.push(avatar_url);
   }
-
-  if (banner_url) {
+  if (banner_url !== undefined) {
     fields.push("banner_url = ?");
     values.push(banner_url);
   }
 
-  if (!fields.length) {
-    throw { status: 400, message: "No fields provided" };
-  }
+  if (fields.length === 0)
+    throw { status: 400, message: "No fields provided to update" };
 
   values.push(userId);
 
@@ -567,26 +533,16 @@ export const updateProfileService = async (userId, updates, files = {}) => {
     values,
   );
 
-  // fetch updated user
-  const [result] = await pool.query(`SELECT * FROM users WHERE id = ?`, [
-    userId,
-  ]);
+  // Return updated profile
+  const [result] = await pool.query(
+    `SELECT id, email, phone, full_name, username, discord, bio,
+            primary_game, game_role, \`rank\`, continent, country,
+            avatar_url, banner_url, role, is_verified, created_at
+     FROM users WHERE id = ?`,
+    [userId],
+  );
 
-  const user = result[0];
-
-  // convert to signed URLs (IMPORTANT)
-  if (user.avatar_url) {
-    user.avatar_url = await getSignedUrl(user.avatar_url);
-  }
-
-  if (user.banner_url) {
-    user.banner_url = await getSignedUrl(user.banner_url);
-  }
-
-  return {
-    message: "Profile updated successfully!",
-    user
-  };
+  return { message: "Profile updated successfully!", user: result[0] };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
