@@ -422,8 +422,22 @@ export const getProfileService = async (identifier) => {
     [identifier],
   );
 
-  if (rows.length === 0) throw { status: 404, message: "User not found" };
-  return { user: rows[0] };
+  if (!rows.length) {
+    throw { status: 404, message: "User not found" };
+  }
+
+  const user = rows[0];
+
+  // 🔥 convert to signed URLs
+  if (user.avatar_url) {
+    user.avatar_url = await getSignedUrl(user.avatar_url);
+  }
+
+  if (user.banner_url) {
+    user.banner_url = await getSignedUrl(user.banner_url);
+  }
+
+  return { user };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -571,7 +585,7 @@ export const updateProfileService = async (userId, updates, files = {}) => {
 
   return {
     message: "Profile updated successfully!",
-    user,
+    user
   };
 };
 
