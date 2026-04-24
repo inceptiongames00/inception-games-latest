@@ -23,7 +23,7 @@ env_variables:
   MAIL_HOST: "smtp.gmail.com"
   MAIL_PORT: "465"
   MAIL_SECURE: "true"
-  MAIL_USER: "devops@inception.games"
+  MAIL_USER: "no-reply@inception.games"
   MAIL_PASS: "ogbb juwo qrhi pipc"
   MAIL_FROM: "no-reply@inception.games"
 
