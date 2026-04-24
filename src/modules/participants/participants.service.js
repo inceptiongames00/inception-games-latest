@@ -105,11 +105,6 @@ export const registerParticipantService = async (tournamentId, data) => {
       console.error("[Mail] Registration email failed:", e.message),
     );
 
-    // ── Send payment details email (non-blocking) ───────────
-    _sendPaymentEmail(registration, tournament, participantId, reference).catch(
-      (e) => console.error("[Mail] Payment email failed:", e.message),
-    );
-
     return {
       message: "Registration submitted! Check your email for payment details.",
       reference,

@@ -18,8 +18,7 @@ export const registrationEmail = (p, t) => `
     <div style="background:linear-gradient(135deg,#1e1b4b,#2e1065);border:1px solid #a855f7;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
       <p style="margin:0 0 12px;font-size:14px;color:#e2e8f0;line-height:1.6;">
         🎉 <strong style="color:#fff;">Registration Update:</strong> Thank you for your interest!
-        Please join our Discord to get started. Note that we will be sending the
-        <strong style="color:#facc15;">Payment QR Code</strong> via a separate email shortly.
+        Please join our Discord to stay updated and get started.
       </p>
       <a href="https://discord.gg/qGsn6T3hFT"
          style="display:inline-block;background:linear-gradient(135deg,#5865f2,#4752c4);color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:bold;letter-spacing:.5px;">
@@ -42,13 +41,6 @@ export const registrationEmail = (p, t) => `
         <span style="font-size:28px;">🚧</span><br/>
         <strong style="color:#fff;">Coming Soon</strong><br/>
         <span style="font-size:13px;">Tournament details will be shared with you shortly.</span>
-      </p>
-    </div>
-
-    <div style="background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:24px;">
-      <h3 style="color:#facc15;margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:1px;">💳 Payment Information</h3>
-      <p style="color:#aaa;font-size:14px;margin:0;">
-        We will send you a <strong style="color:#facc15;">separate email</strong> with the Payment QR Code and full instructions shortly. Please wait for that email before making any payment.
       </p>
     </div>
 
