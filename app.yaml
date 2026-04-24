@@ -25,7 +25,7 @@ env_variables:
   MAIL_SECURE: "true"
   MAIL_USER: "devops@inception.games"
   MAIL_PASS: "ogbb juwo qrhi pipc"
-  MAIL_FROM: "devops@inception.games"
+  MAIL_FROM: "no-reply@inception.games"
 
 beta_settings:
   cloud_sql_instances: inception-games:asia-northeast1:inception-studio-db
