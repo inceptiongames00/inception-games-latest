@@ -23,9 +23,9 @@ env_variables:
   MAIL_HOST: "smtp.gmail.com"
   MAIL_PORT: "465"
   MAIL_SECURE: "true"
-  MAIL_USER: "no-reply@inception.games"
+  MAIL_USER: "devops@inception.games"
   MAIL_PASS: "ogbb juwo qrhi pipc"
-  MAIL_FROM: "no-reply@inception.games"
+  MAIL_FROM: "devops@inception.games"
 
 beta_settings:
   cloud_sql_instances: inception-games:asia-northeast1:inception-studio-db
